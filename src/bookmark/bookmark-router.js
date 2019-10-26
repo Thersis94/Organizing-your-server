@@ -3,12 +3,18 @@ const uuid = require("uuid/v4");
 const logger = require("../logger")
 const bookmarkRouter = express.Router();
 const bodyParser = express.json();
+const BookmarkService = require('../bookmark-service')
 const bookmarks = [];
 
 bookmarkRouter
   .route("/bookmarks")
-  .get((req, res) => {
-    res.status(200).json(bookmarks);
+  .get((req, res, next) => {
+    const knexInstance = req.app.get('db')
+    BookmarkService.getAllItems(knexInstance)
+    .then(items => {
+      res.status(200).json(items)
+    })
+    .catch(next)
   })
   .post(bodyParser, (req, res) => {
     const { title, url, description, rating } = req.body;
@@ -43,9 +49,9 @@ bookmarkRouter
   bookmarkRouter
   .route('/bookmarks/:id')
   .get((req, res) => {
+    const knexInstance = req.app.get('db')
     const { id } = req.params;
-    const bookmark = bookmarks.find(c => c.id == id);
-
+    const bookmark = BookmarkService.getById(knexInstance, id)
     if (!bookmark) {
       logger.error(`Bookmark with id ${id} not found.`);
       return res.status(404).send("Card Not Found");
