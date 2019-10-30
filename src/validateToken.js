@@ -1,3 +1,4 @@
+const logger = require('./logger')
 
 function validateToken(req, res, next) {
   const authToken = req.get("Authorization");

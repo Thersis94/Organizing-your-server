@@ -18,9 +18,9 @@ const BookmarkService = {
         .into('bookmarks')
         .returning('*')
         .then(rows => {
+            //console.log(rows)
             return rows[0]
         })
     }
 }
-
 module.exports = BookmarkService

@@ -4,7 +4,6 @@ const logger = require("../logger")
 const bookmarkRouter = express.Router();
 const bodyParser = express.json();
 const BookmarkService = require('../bookmark-service')
-const bookmarks = [];
 
 bookmarkRouter
   .route("/bookmarks")
@@ -16,7 +15,7 @@ bookmarkRouter
     })
     .catch(next)
   })
-  .post(bodyParser, (req, res) => {
+  .post(bodyParser, (req, res, next) => {
     const { title, url, description, rating } = req.body;
     if (!title) {
       logger.error(`Title is required`);
@@ -34,16 +33,19 @@ bookmarkRouter
       logger.error(`Rating must be between 1 and 5`);
       return res.status(400).send("Invalid data");
     }
-    const id = uuid();
     const newBookmark = {
       title,
       url,
       description,
-      rating,
-      id
+      rating
     };
-    bookmarks.push(newBookmark)
-    res.status(204).send('Bookmark added')
+    BookmarkService.insertItem(req.app.get('db'), newBookmark)
+    .then(bookmark => {
+      logger.info(`Bookmark with id ${bookmark.id} created.`)
+      res.status(201)
+      .json(bookmark)
+    })
+    .catch(next)
   })
 
   bookmarkRouter
