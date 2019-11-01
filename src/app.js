@@ -1,32 +1,28 @@
-require("dotenv").config();
-const express = require("express");
-const morgan = require("morgan");
-const cors = require("cors");
-const helmet = require("helmet");
-const { NODE_ENV } = require("./config");
-const validateToken = require("./validateToken");
-const errorHandler = require("./errorHandler");
-const app = express();
-const bookmarkRouter = require("./bookmark/bookmark-router");
-const morganOption = NODE_ENV === "production" ? "tiny" : "common";
-const jsonParser = express.json();
-const BookmarkService = require('./bookmark-service')
-app.use(morgan(morganOption));
-app.use(cors());
-app.use(helmet());
-app.use(express.json());
-app.use(validateToken);
+require('dotenv').config()
+const express = require('express')
+const morgan = require('morgan')
+const cors = require('cors')
+const helmet = require('helmet')
+const { NODE_ENV } = require('./config')
+const validateBearerToken = require('./validateToken')
+const errorHandler = require('./errorHandler')
+const bookmarksRouter = require('./bookmark/bookmark-router')
 
-//app.post("/bookmarks", jsonParser, (req, res, next) => {
-//  const { title, url, description, rating } = req.body;
-//  const newBookmark = { title, url, description, rating };
-//  BookmarkService.insertItem(req.app.get("db"), newBookmark)
-//    .then(bookmark => {
-//      res.status(201).json(bookmark);
-//    })
-//    .catch(next);
-//});
+const app = express()
 
-app.use(bookmarkRouter);
-app.use(errorHandler);
-module.exports = app;
+app.use(morgan((NODE_ENV === 'production') ? 'tiny' : 'common', {
+  skip: () => NODE_ENV === 'test'
+}))
+app.use(cors())
+app.use(helmet())
+app.use(validateBearerToken)
+
+app.use('/api/bookmarks', bookmarksRouter)
+
+app.get('/', (req, res) => {
+  res.send('Hello, world!')
+})
+
+app.use(errorHandler)
+
+module.exports = app
